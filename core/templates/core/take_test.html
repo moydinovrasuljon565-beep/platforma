@@ -1,0 +1,249 @@
+{% extends "core/base.html" %}
+{% block title %}{{ test.title }} — TestUZ{% endblock %}
+
+{% block extra_style %}
+<style>
+    .timer-badge {
+        background: #fff1f2;
+        color: #e11d48;
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 14px;
+    }
+    .timer-badge.low { animation: pulse 1s infinite; }
+    @keyframes pulse { 50% { opacity: .4; } }
+
+    .progress-bar {
+        height: 8px;
+        background: #e8ecf3;
+        border-radius: 20px;
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+    .progress-fill {
+        height: 100%;
+        background: #2563eb;
+        width: 0%;
+        transition: width .3s;
+    }
+
+    .q-block { display: none; }
+    .q-block.active { display: block; }
+
+    .choice-option.correct-answer {
+        border-color: #22c55e !important;
+        background: #f0fdf4 !important;
+        color: #15803d;
+    }
+    .choice-option.wrong-answer {
+        border-color: #e11d48 !important;
+        background: #fff1f2 !important;
+        color: #be123c;
+    }
+    .choice-option.disabled { pointer-events: none; opacity: .85; }
+
+    .feedback-line {
+        margin-top: 10px;
+        font-weight: 700;
+        font-size: 14px;
+        display: none;
+    }
+    .feedback-line.show { display: block; }
+    .feedback-line.ok { color: #15803d; }
+    .feedback-line.bad { color: #be123c; }
+
+    .next-btn {
+        display: none;
+        margin-top: 16px;
+        width: 100%;
+        border: none;
+        background: #2563eb;
+        color: white;
+        padding: 13px;
+        border-radius: 11px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .next-btn.show { display: block; }
+
+    .summary-box {
+        display: none;
+        background: white;
+        border: 1px solid #e8ecf3;
+        border-radius: 18px;
+        padding: 30px;
+        text-align: center;
+    }
+    .summary-box.show { display: block; }
+    .summary-score {
+        font-size: 46px;
+        font-weight: 900;
+        color: #2563eb;
+        margin: 12px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="quiz-wrap">
+    <div class="quiz-head">
+        <div>
+            <h2>📝 {{ test.title }}</h2>
+            <div class="quiz-meta" id="progress-label">{{ test.subject.name }} · {{ questions|length }} ta savol</div>
+        </div>
+        <div class="timer-badge" id="timer-badge">⏱ --:--</div>
+    </div>
+
+    {% if questions %}
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+
+    <form method="post" id="quiz-form">
+        {% csrf_token %}
+        {% for q in questions %}
+        <div class="q-block{% if forloop.first %} active{% endif %}" data-index="{{ forloop.counter0 }}">
+            <div class="q-num">Savol {{ forloop.counter }} / {{ questions|length }}</div>
+            <div class="q-text">{{ q.text }}</div>
+
+            {% for c in q.choices %}
+            <label class="choice-option" data-correct="{{ c.is_correct|yesno:'true,false' }}">
+                <input type="radio" name="question_{{ q.id }}" value="{{ c.id }}" style="display:none;">
+                {{ c.text }}
+            </label>
+            {% endfor %}
+
+            <div class="feedback-line"></div>
+            <button type="button" class="next-btn">Keyingi savol →</button>
+        </div>
+        {% endfor %}
+
+        <div class="summary-box" id="summary-box">
+            <div style="font-size:36px;">🎯</div>
+            <h2>Javoblaringiz tayyor!</h2>
+            <p id="summary-text" style="color:#64748b;">Siz {{ questions|length }} ta savoldan nechtasiga to'g'ri javob berganingizni pastda ko'rasiz.</p>
+            <div class="summary-score" id="summary-score">0 / {{ questions|length }}</div>
+            <button type="submit" class="submit-quiz">Yakunlash va saqlash ✓</button>
+        </div>
+    </form>
+    {% else %}
+    <p class="empty-hint">Bu testda hali savollar yo‘q.</p>
+    {% endif %}
+</div>
+
+<script>
+(function () {
+    var blocks = Array.prototype.slice.call(document.querySelectorAll('.q-block'));
+    var totalQuestions = blocks.length;
+    var correctCount = 0;
+    var currentIndex = 0;
+    var progressLabel = document.getElementById('progress-label');
+    var progressFill = document.getElementById('progress-fill');
+    var summaryBox = document.getElementById('summary-box');
+    var summaryScore = document.getElementById('summary-score');
+    var form = document.getElementById('quiz-form');
+
+    function updateProgress() {
+        var shown = Math.min(currentIndex + 1, totalQuestions);
+        progressLabel.textContent = "{{ test.subject.name }} · Savol " + shown + " / " + totalQuestions;
+        progressFill.style.width = Math.round((shown / totalQuestions) * 100) + "%";
+    }
+
+    function showBlock(index) {
+        blocks.forEach(function (b, i) {
+            b.classList.toggle('active', i === index);
+        });
+        updateProgress();
+    }
+
+    blocks.forEach(function (block) {
+        var options = Array.prototype.slice.call(block.querySelectorAll('.choice-option'));
+        var feedback = block.querySelector('.feedback-line');
+        var nextBtn = block.querySelector('.next-btn');
+        var answered = false;
+
+        options.forEach(function (opt) {
+            opt.addEventListener('click', function () {
+                if (answered) return;
+                answered = true;
+
+                var input = opt.querySelector('input');
+                input.checked = true;
+
+                var isCorrect = opt.getAttribute('data-correct') === 'true';
+
+                options.forEach(function (o) {
+                    o.classList.add('disabled');
+                    if (o.getAttribute('data-correct') === 'true') {
+                        o.classList.add('correct-answer');
+                    }
+                });
+
+                if (isCorrect) {
+                    correctCount += 1;
+                    feedback.textContent = "✅ To'g'ri javob!";
+                    feedback.classList.add('ok');
+                } else {
+                    opt.classList.add('wrong-answer');
+                    feedback.textContent = "❌ Noto'g'ri javob.";
+                    feedback.classList.add('bad');
+                }
+                feedback.classList.add('show');
+                nextBtn.classList.add('show');
+            });
+        });
+
+        nextBtn.addEventListener('click', function () {
+            currentIndex += 1;
+            if (currentIndex < totalQuestions) {
+                showBlock(currentIndex);
+            } else {
+                blocks.forEach(function (b) { b.classList.remove('active'); });
+                summaryScore.textContent = correctCount + " / " + totalQuestions;
+                summaryBox.classList.add('show');
+                progressFill.style.width = "100%";
+                progressLabel.textContent = "{{ test.subject.name }} · Yakunlandi";
+            }
+        });
+    });
+
+    updateProgress();
+
+    // --- Countdown timer: server tomonidan berilgan deadline asosida ---
+    var deadlineMs = {{ deadline_ms }};
+    var serverNowMs = {{ server_now_ms }};
+    var clientNowAtLoad = Date.now();
+    var timerEl = document.getElementById('timer-badge');
+    var autoSubmitted = false;
+
+    function formatTime(ms) {
+        if (ms < 0) ms = 0;
+        var totalSec = Math.floor(ms / 1000);
+        var h = Math.floor(totalSec / 3600);
+        var m = Math.floor((totalSec % 3600) / 60);
+        var s = totalSec % 60;
+        function pad(n) { return n < 10 ? '0' + n : '' + n; }
+        return h > 0 ? (pad(h) + ':' + pad(m) + ':' + pad(s)) : (pad(m) + ':' + pad(s));
+    }
+
+    function tick() {
+        var elapsedSinceLoad = Date.now() - clientNowAtLoad;
+        var approxServerNow = serverNowMs + elapsedSinceLoad;
+        var remaining = deadlineMs - approxServerNow;
+
+        timerEl.textContent = "⏱ " + formatTime(remaining);
+        timerEl.classList.toggle('low', remaining <= 60000);
+
+        if (remaining <= 0 && !autoSubmitted) {
+            autoSubmitted = true;
+            timerEl.textContent = "⏱ Vaqt tugadi";
+            form.submit();
+            return;
+        }
+        if (!autoSubmitted) {
+            setTimeout(tick, 1000);
+        }
+    }
+    tick();
+})();
+</script>
+{% endblock %}

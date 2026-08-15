@@ -1,0 +1,37 @@
+{% extends "core/base.html" %}
+{% block title %}Kirish — TestUZ{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-card">
+        <h2>Xush kelibsiz 👋</h2>
+        <p class="sub">Hisobingizga kirish uchun ma'lumotlarni kiriting.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="field">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <ul class="errorlist">
+                    {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            {% if form.non_field_errors %}
+            <ul class="errorlist">
+                {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+
+            <button type="submit" class="auth-submit">Kirish</button>
+        </form>
+
+        <div class="auth-switch">
+            Hisobingiz yo‘qmi? <a href="{% url 'register' %}">Ro‘yxatdan o‘ting</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

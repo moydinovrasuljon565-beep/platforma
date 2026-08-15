@@ -1,0 +1,11 @@
+{% extends "core/base.html" %}
+{% block title %}Natija — TestUZ{% endblock %}
+{% block content %}
+<div class="result-wrap">
+    <div style="font-size:40px;">🎉</div>
+    <h2>{{ attempt.test.title }}</h2>
+    <p>{{ attempt.total }} ta savoldan {{ attempt.score }} tasiga to'g'ri javob berdingiz</p>
+    <div class="result-score">{{ attempt.score }} / {{ attempt.total }}</div>
+    <a href="{% url 'test_list' %}"><button class="primary-btn">Boshqa test ishlash →</button></a>
+</div>
+{% endblock %}

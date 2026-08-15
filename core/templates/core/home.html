@@ -1,0 +1,112 @@
+{% extends "core/base.html" %}
+{% block content %}
+
+<section class="hero" id="home">
+    <div class="hero-content">
+        <div class="badge">🚀 Zamonaviy online test platformasi</div>
+
+        <h1>Bilimingizni <span>sinab ko‘ring.</span></h1>
+
+        <p>
+            TestUZ orqali turli fanlardan test topshiring,
+            natijangizni darhol ko‘ring va reytingda yuqoriga ko‘tariling.
+        </p>
+
+        <div class="hero-buttons">
+            {% if user.is_authenticated %}
+            <a href="{% url 'test_list' %}"><button class="primary-btn">Testni boshlash →</button></a>
+            {% else %}
+            <a href="{% url 'register' %}"><button class="primary-btn">Testni boshlash →</button></a>
+            {% endif %}
+            <a href="#rating"><button class="secondary-btn">Reytingni ko‘rish</button></a>
+        </div>
+    </div>
+
+    <div class="hero-card">
+        <div class="test-header">
+            <div class="test-title">Mavjud testlar</div>
+        </div>
+
+        {% if tests %}
+        {% for t in tests|slice:":3" %}
+        <div class="mini-test">
+            <div class="subject">{{ t.subject.name }}</div>
+            <h4>{{ t.title }}</h4>
+            <div class="test-meta">{{ t.question_count }} ta savol · ⏱ {{ t.duration_minutes }} daqiqa</div>
+            <a href="{% url 'take_test' t.id %}" class="go-btn">Boshlash →</a>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="empty-hint">Hozircha testlar qo‘shilmagan. Admin panelda test yarating.</p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="section" id="features">
+    <div class="section-title">
+        <h2>Platforma imkoniyatlari</h2>
+        <p>TestUZ bilan test topshirish yanada qulay</p>
+    </div>
+
+    <div class="features">
+        <div class="feature">
+            <div class="feature-icon">🎯</div>
+            <h3>Aralashtirilgan test</h3>
+            <p>Savollar va javob variantlari admin panel orqali erkin boshqariladi.</p>
+        </div>
+
+        <div class="feature">
+            <div class="feature-icon">⚡</div>
+            <h3>Darhol natija</h3>
+            <p>Testni topshirgach, ballingiz darhol hisoblab beriladi.</p>
+        </div>
+
+        <div class="feature">
+            <div class="feature-icon">🏆</div>
+            <h3>Reyting</h3>
+            <p>Eng yuqori natija ko‘rsatgan foydalanuvchilar reytingda ko‘rsatiladi.</p>
+        </div>
+
+        <div class="feature">
+            <div class="feature-icon">⏱️</div>
+            <h3>Vaqt nazorati</h3>
+            <p>Har bir test uchun admin belgilagan vaqt cheklovi mavjud.</p>
+        </div>
+    </div>
+</section>
+
+<section class="section" id="rating">
+    <div class="section-title">
+        <h2>🏆 Top reyting</h2>
+        <p>Eng yaxshi natija ko‘rsatganlar</p>
+    </div>
+
+    <div class="leaderboard">
+        {% for p in leaderboard %}
+        <div class="leader">
+            <div class="user">
+                <div class="rank">{{ forloop.counter }}</div>
+                <div class="avatar">{{ p.user.username|first|upper }}</div>
+                <div>
+                    <strong>{{ p.user.username }}</strong>
+                </div>
+            </div>
+            <div class="points">{{ p.total_score }} ball</div>
+        </div>
+        {% empty %}
+        <p class="empty-hint">Hali natijalar yo‘q. Birinchi bo‘lib test topshiring!</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="cta">
+    <h2>Bilimingizni bugun sinab ko‘ring!</h2>
+    <p>Ro‘yxatdan o‘ting va birinchi testingizni boshlang.</p>
+    {% if user.is_authenticated %}
+    <a href="{% url 'test_list' %}"><button>Testlarni ko‘rish →</button></a>
+    {% else %}
+    <a href="{% url 'register' %}"><button>Bepul ro‘yxatdan o‘tish →</button></a>
+    {% endif %}
+</section>
+
+{% endblock %}

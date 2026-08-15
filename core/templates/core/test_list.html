@@ -1,0 +1,25 @@
+{% extends "core/base.html" %}
+{% block title %}Testlar — TestUZ{% endblock %}
+{% block content %}
+<section class="section">
+    <div class="section-title">
+        <h2>📚 Mavjud testlar</h2>
+        <p>O‘zingizga mos testni tanlang va boshlang</p>
+    </div>
+
+    {% if tests %}
+    <div class="test-grid">
+        {% for t in tests %}
+        <div class="test-card">
+            <div class="subject">{{ t.subject.name }}</div>
+            <h3>{{ t.title }}</h3>
+            <p>{{ t.question_count }} ta savol · ⏱ {{ t.duration_minutes }} daqiqa</p>
+            <a href="{% url 'take_test' t.id %}"><button class="primary-btn">Testni boshlash →</button></a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-hint" style="text-align:center;">Hozircha testlar qo‘shilmagan.</p>
+    {% endif %}
+</section>
+{% endblock %}

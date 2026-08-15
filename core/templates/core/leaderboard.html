@@ -1,0 +1,25 @@
+{% extends "core/base.html" %}
+{% block title %}Reyting — TestUZ{% endblock %}
+{% block content %}
+<section class="section">
+    <div class="section-title">
+        <h2>🏆 Umumiy reyting</h2>
+        <p>Barcha foydalanuvchilar to‘plagan ballar bo‘yicha</p>
+    </div>
+
+    <div class="leaderboard">
+        {% for p in profiles %}
+        <div class="leader">
+            <div class="user">
+                <div class="rank">{{ forloop.counter }}</div>
+                <div class="avatar">{{ p.user.username|first|upper }}</div>
+                <div><strong>{{ p.user.username }}</strong></div>
+            </div>
+            <div class="points">{{ p.total_score }} ball</div>
+        </div>
+        {% empty %}
+        <p class="empty-hint">Hali natijalar yo‘q.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
