@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-s5s4vws%@!z*=2d^_&*r5*ydd9*$@er@0a%^*=&r5@m#1+pz92
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "platforma-production-35df.up.railway.app",
+    "platformalar.up.railway.app",
     "localhost",
     "127.0.0.1",
 ]
